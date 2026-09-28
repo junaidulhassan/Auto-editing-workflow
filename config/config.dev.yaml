@@ -1,0 +1,47 @@
+mode: dev
+
+paths:
+  incoming: "${PIPELINE_INCOMING:-${PIPELINE_HOME:-~/auto-editing-workflow}/data/incoming}"
+  originals: "${PIPELINE_HOME:-~/auto-editing-workflow}/data/originals"
+  processed: "${PIPELINE_HOME:-~/auto-editing-workflow}/data/processed"
+  failed: "${PIPELINE_HOME:-~/auto-editing-workflow}/data/failed"
+  work: "${PIPELINE_HOME:-~/auto-editing-workflow}/data/work"
+  models: "${PIPELINE_HOME:-~/auto-editing-workflow}/models"
+  state_db: "${PIPELINE_HOME:-~/auto-editing-workflow}/data/state.db"
+  logs: "${PIPELINE_HOME:-~/auto-editing-workflow}/data/logs"
+
+watcher:
+  stability_ms: 300
+  startup_scan_min_age_s: 2
+  sweep_interval_s: 30
+  sweep_min_age_s: 15
+
+workers:
+  count: 2
+  opencv_threads: 2
+
+retouch:
+  enabled: true
+  strength: 0.35
+  landmarks:
+    enabled: false
+
+export:
+  long_edge: 2048
+  quality: 90
+
+publish:
+  enabled: true
+  backend: local
+  local:
+    target_dir: "${PUBLISH_LOCAL_DIR:-${PIPELINE_HOME:-~/auto-editing-workflow}/data/gallery}"
+  retry:
+    base_delay_s: 10
+    max_delay_s: 300
+    poll_interval_s: 5
+
+logging:
+  level: DEBUG
+  console: true
+  journal: false
+  heartbeat_s: 120

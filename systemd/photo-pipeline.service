@@ -1,0 +1,42 @@
+[Unit]
+Description=Photo auto-edit pipeline (camera FTP to website gallery)
+Documentation=file:///opt/photo-pipeline/app/README.md
+After=network-online.target local-fs.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=20
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=photopipe
+Group=photos
+UMask=0002
+WorkingDirectory=/opt/photo-pipeline/app
+Environment=PYTHONUNBUFFERED=1
+Environment=HOME=/var/lib/photo-pipeline
+Environment=PHOTO_PIPELINE_CONFIG=/etc/photo-pipeline/config.yaml
+EnvironmentFile=-/etc/photo-pipeline/photo-pipeline.env
+ExecStartPre=/opt/photo-pipeline/venv/bin/python -m photo_pipeline init-dirs --config /etc/photo-pipeline/config.yaml
+ExecStart=/opt/photo-pipeline/venv/bin/python -m photo_pipeline run --config /etc/photo-pipeline/config.yaml
+Restart=always
+RestartSec=5
+TimeoutStartSec=180
+TimeoutStopSec=90
+KillMode=mixed
+Nice=5
+StateDirectory=photo-pipeline
+LogsDirectory=photo-pipeline
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/photos /var/lib/photo-pipeline /var/log/photo-pipeline -/var/www/gallery
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

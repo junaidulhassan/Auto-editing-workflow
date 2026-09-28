@@ -1,0 +1,191 @@
+mode: production
+
+paths:
+  incoming: /srv/photos/incoming
+  originals: /srv/photos/originals
+  processed: /srv/photos/processed
+  failed: /srv/photos/failed
+  work: /srv/photos/work
+  models: /opt/photo-pipeline/models
+  state_db: /var/lib/photo-pipeline/state.db
+  logs: /var/log/photo-pipeline
+
+watcher:
+  recursive: true
+  accept_moved: true
+  extensions: [".jpg", ".jpeg", ".png", ".cr2", ".cr3", ".nef", ".arw", ".raf", ".dng"]
+  ignore_patterns: ["*.tmp", "*.part", "*.partial", "*.filepart", "*.crdownload", "*.download", "*.swp", "~*"]
+  stability_ms: 400
+  stability_timeout_s: 30
+  startup_scan: true
+  startup_scan_min_age_s: 3
+  sweep_interval_s: 60
+  sweep_min_age_s: 30
+  incomplete_grace_s: 300
+  min_raw_bytes: 102400
+
+workers:
+  count: 2
+  queue_maxsize: 10000
+  opencv_threads: 2
+
+originals:
+  organize_by_date: true
+  duplicates: move
+
+raw:
+  engine: auto
+  rawtherapee_cli: rawtherapee-cli
+  rawtherapee_profile: "/usr/share/rawtherapee/profiles/Auto-Matched Curve - ISO Low.pp3"
+  darktable_cli: darktable-cli
+  darktable_style: ""
+  timeout_s: 300
+  apply_auto_edits: true
+  keep_intermediate: false
+
+edit:
+  enabled: true
+  white_balance:
+    enabled: true
+    strength: 0.6
+    max_gain: 1.25
+    neutral_saturation: 0.25
+    min_neutral_fraction: 0.05
+  exposure:
+    enabled: true
+    strength: 0.8
+    low_clip_pct: 0.3
+    high_clip_pct: 0.3
+    max_black_point: 0.12
+    min_white_point: 0.5
+    max_gain: 2.0
+    highlight_knee: 0.9
+    target_midtone: 0.45
+    min_gamma: 0.75
+    max_gamma: 1.35
+  contrast:
+    enabled: true
+    strength: 0.6
+    clip_limit: 1.6
+    tile_grid: 8
+
+retouch:
+  enabled: true
+  on_model_error: disable
+  strength: 0.35
+  min_strength: 0.08
+  fallback_factor: 0.6
+  method: bilateral
+  max_faces: 20
+  roi_margin: 0.35
+  work_face_width: 320
+  smooth_radius: 0.02
+  sigma_color: 7.0
+  texture_radius: 0.004
+  texture_keep: 0.9
+  chroma_smoothing: 0.5
+  max_luma_change: 12.0
+  feather: 0.03
+  profile_policy: reduce
+  profile_strength_scale: 0.5
+  profile_eye_ratio: 0.25
+  detector:
+    model: face_detection_yunet_2023mar.onnx
+    score_threshold: 0.75
+    nms_threshold: 0.3
+    top_k: 100
+    max_side: 2048
+    min_face_px: 28
+  landmarks:
+    enabled: false
+    model: face_landmarker.task
+    min_confidence: 0.5
+    crop_scale: 1.6
+  skin:
+    adaptive: true
+    cr_range: [133, 173]
+    cb_range: [77, 127]
+    min_luma: 0.03
+  safety:
+    min_ssim: 0.93
+    max_mean_abs_diff: 4.0
+
+export:
+  long_edge: 2048
+  upscale: false
+  format: jpeg
+  quality: 90
+  progressive: true
+  optimize: true
+  subsampling: "4:2:0"
+  embed_srgb_icc: true
+  metadata: keep
+  strip_gps: true
+  strip_makernote: true
+  filename_template: "{stem}"
+  subdir_by_date: false
+
+publish:
+  enabled: true
+  backend: local
+  local:
+    target_dir: "${PUBLISH_LOCAL_DIR:-/var/www/gallery/photos}"
+    subdir_by_date: false
+    file_mode: "0644"
+    manifest: true
+    manifest_name: manifest.json
+    manifest_max_items: 5000
+  ssh:
+    method: rsync
+    host: "${PUBLISH_SSH_HOST:-}"
+    port: 22
+    user: "${PUBLISH_SSH_USER:-}"
+    remote_dir: "${PUBLISH_SSH_REMOTE_DIR:-}"
+    ssh_key: "${PUBLISH_SSH_KEY:-}"
+    known_hosts: ""
+    strict_host_key_checking: accept-new
+    connect_timeout_s: 10
+    timeout_s: 120
+    subdir_by_date: false
+    mkpath: true
+    rsync_extra_args: []
+  https:
+    url: "${PUBLISH_HTTPS_URL:-}"
+    method: POST
+    upload_mode: multipart
+    file_field: file
+    form_fields:
+      filename: "{filename}"
+      sha256: "{sha256}"
+    headers: {}
+    auth: bearer
+    token_env: PUBLISH_HTTPS_TOKEN
+    username_env: PUBLISH_HTTPS_USERNAME
+    password_env: PUBLISH_HTTPS_PASSWORD
+    api_key_header: X-API-Key
+    api_key_env: PUBLISH_HTTPS_API_KEY
+    verify_tls: true
+    ca_bundle: ""
+    connect_timeout_s: 10
+    read_timeout_s: 60
+    idempotency_header: Idempotency-Key
+    response_url_field: url
+    allow_insecure_http: false
+  retry:
+    inline_attempts: 3
+    inline_base_delay_s: 1.0
+    base_delay_s: 30
+    max_delay_s: 1800
+    max_attempts: 0
+    poll_interval_s: 15
+    jitter: 0.2
+
+logging:
+  level: INFO
+  file: true
+  file_name: pipeline.log
+  max_bytes: 10485760
+  backups: 10
+  console: false
+  journal: true
+  heartbeat_s: 300
