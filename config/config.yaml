@@ -125,6 +125,12 @@ export:
   filename_template: "{stem}"
   subdir_by_date: false
 
+compare:
+  enabled: false
+  long_edge: 1400
+  quality: 88
+  suffix: "_compare"
+
 publish:
   enabled: true
   backend: local

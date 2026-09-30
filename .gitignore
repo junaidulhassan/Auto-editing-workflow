@@ -9,3 +9,8 @@ models/*
 tests/fixtures/*
 !tests/fixtures/.gitkeep
 *.log
+test-sample-images/*
+!test-sample-images/.gitkeep
+edited-image/*
+!edited-image/.gitkeep
+local-test-data/

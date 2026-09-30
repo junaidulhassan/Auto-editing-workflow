@@ -83,24 +83,13 @@ def _save_mask(output: Path, masks: list[tuple[int, int, Any]], size: tuple[int,
     return target
 
 
-def _label(image: Any, text: str) -> Any:
-    import cv2
-
-    height = image.shape[0]
-    scale = max(0.6, height / 900.0)
-    thickness = max(1, int(round(scale * 2)))
-    origin = (int(20 * scale), int(45 * scale))
-    cv2.putText(image, text, origin, cv2.FONT_HERSHEY_SIMPLEX, scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
-    cv2.putText(image, text, origin, cv2.FONT_HERSHEY_SIMPLEX, scale, (255, 255, 255), thickness, cv2.LINE_AA)
-    return image
-
-
 def _save_compare(processor: Any, source: Path, output: Path, mask_path: Path | None) -> Path:
     import cv2
     import numpy as np
     from PIL import Image
 
     from .colorspace import to_uint8
+    from .compare import label as _label
     from .loader import load_image
 
     with Image.open(output) as image:

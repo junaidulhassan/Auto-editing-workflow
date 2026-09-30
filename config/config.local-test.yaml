@@ -1,0 +1,29 @@
+mode: dev
+
+paths:
+  incoming: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/test-sample-images
+  processed: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/edited-image
+  originals: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/local-test-data/originals
+  failed: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/local-test-data/failed
+  work: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/local-test-data/work
+  state_db: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/local-test-data/state.db
+  logs: /media/junaid-ul-hassan/NewVolume/Freelance_Projects/Auto-editing-workflow/local-test-data/logs
+  models: ${PIPELINE_HOME:-~/auto-editing-workflow}/models
+
+watcher:
+  stability_ms: 300
+  startup_scan_min_age_s: 0
+
+export:
+  filename_template: "{stem}_edited"
+
+compare:
+  enabled: true
+
+publish:
+  enabled: false
+
+logging:
+  level: INFO
+  console: true
+  journal: false

@@ -138,6 +138,7 @@ DEFAULTS: dict[str, Any] = {
         "filename_template": "{stem}",
         "subdir_by_date": False,
     },
+    "compare": {"enabled": False, "long_edge": 1400, "quality": 88, "suffix": "_compare"},
     "publish": {
         "enabled": True,
         "backend": "local",

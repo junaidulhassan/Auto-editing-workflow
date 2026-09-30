@@ -8,6 +8,7 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+from .compare import write_before_after
 from .config import Config
 from .editing import AutoEditor
 from .exporter import Exporter
@@ -149,6 +150,7 @@ class PhotoProcessor:
 
         step = time.perf_counter()
         rgb = self.exporter.resize(loaded.rgb)
+        before = rgb
         timings["resize"] = _ms(step)
         details["kind"] = loaded.kind
         details["size"] = f"{rgb.shape[1]}x{rgb.shape[0]}"
@@ -166,6 +168,15 @@ class PhotoProcessor:
         step = time.perf_counter()
         output = self.exporter.export(rgb, loaded.exif, source_name, sha256, output_dir=output_dir)
         timings["export"] = _ms(step)
+
+        if self.cfg.compare.enabled:
+            step = time.perf_counter()
+            try:
+                target = output.with_name(f"{output.stem}{self.cfg.compare.suffix}.jpg")
+                details["compare"] = str(write_before_after(before, rgb, target, self.cfg.compare))
+            except Exception as exc:
+                log.warning("could not write before/after image for %s: %s", source_name, exc)
+            timings["compare"] = _ms(step)
         return output, details
 
     def archive_original(self, path: Path, sha256: str) -> Path:
